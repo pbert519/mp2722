@@ -1,0 +1,20 @@
+[package]
+name = "mp2722"
+version = "0.1.0"
+edition = "2024"
+license = "MIT"
+description = "Driver for the MP2722 battery charging ic"
+repository = "https://github.com/pbert519/mp2722"
+categories = ["no-std", "embedded"]
+readme = "README.md"
+
+[features]
+defmt-03 = ["dep:defmt", "device-driver/defmt-03"]
+
+[dependencies]
+device-driver = { version = "1.0.7" }
+embedded-hal = "1.0.0"
+defmt = { version = "0.3", optional = true }
+
+[dev-dependencies]
+linux-embedded-hal = "0.4.0"
