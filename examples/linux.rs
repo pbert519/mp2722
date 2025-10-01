@@ -7,9 +7,15 @@ fn main() -> Result<(), Box<dyn Error>> {
     let interface = Mp2722Interface::new(i2c);
 
     let mut device = Mp2722Registers::new(interface);
-    let s = device.status_17().read().unwrap();
 
-    println!("Status17: {:?}", s);
+    println!("MP2722 Status: \n {:?} \n {:?} \n {:?} \n {:?} \n {:?} \n {:?} \n", 
+        device.status_17().read().unwrap(),
+        device.status_18().read().unwrap(),
+        device.status_19().read().unwrap(),
+        device.status_20().read().unwrap(),
+        device.status_21().read().unwrap(),
+        device.status_22().read().unwrap()
+    );
 
     Ok(())
 }
