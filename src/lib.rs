@@ -68,67 +68,94 @@ device_driver::create_device!(
         register Config0 {
             const ADDRESS = 0;
             const SIZE_BITS = 8;
+            /// Write 1 to reset registers to default value
             REG_RST: bool = 7,
+            /// 0: STAT/IB is configured as status indicator, 1: STAT/IB is configured as current indicator
             EN_STAT_IB: bool = 6,
+            /// 0: PG/NTC is power good 1: PG/NTC is thermistor input
             EN_PG_NTC2: bool = 5,
+            /// Lock charge settings, further writes can only reduce values
             LOCK_CHG: bool = 4,
+            /// Enable the hold-off timer
             HOLDOFF_TMR: bool = 3,
+            /// Set buck / boost frequency
             SW_FREQ: uint = 1..3,
             EN_VIN_TRK: bool = 0,
         },
         register Config1 {
             const ADDRESS = 1;
             const SIZE_BITS = 8;
+            /// Force limit input current
             IIN_MODE: uint = 5..8,
+            /// input current limit, updated by input source detection, can be overwritten
             IIN_LIMIT: uint = 0..5
         },
         register Config2 {
             const ADDRESS = 2;
             const SIZE_BITS = 8;
+            /// pre charge to fast charge threshold
             VPRE: uint = 6..8,
+            /// Fast charge current
             ICC: uint = 0..6
         },
         register Config3 {
             const ADDRESS = 3;
             const SIZE_BITS = 8;
+            /// Precharge current
             IPRE: uint = 4..8,
+            /// Termination current
             ITERM: uint = 0..4
         },
         register Config4 {
             const ADDRESS = 4;
             const SIZE_BITS = 8;
+            /// Recharge threshold
             VRECHG: bool = 7,
+            /// Trickle charge current
             ITRICKLE: uint = 4..7,
+            /// Input voltage limit threshold
             VIN_LIM: uint = 0..4
         },
         register Config5 {
             const ADDRESS = 5;
             const SIZE_BITS = 8;
+            /// Timer to stop charging after charge termination
             TOPOFF_TM: uint = 6..8,
+            /// Battery regulation voltage (max battery voltage)
             VBATT: uint = 0..6
         },
         register Config6 {
             const ADDRESS = 6;
             const SIZE_BITS = 8;
+            /// Input over voltage protection threshold
             VIN_OVP: uint = 6..8,
+            /// Minimum system voltage
             SYS_MIN: uint = 3..6,
+            /// Thermal threshold for charge regulation and boost mode protection
             TREG: uint = 0..3
         },
         register Config7 {
             const ADDRESS = 7;
             const SIZE_BITS = 8;
+            /// 0: IB outputs when the switcher is on, 1: IB outputs all the time
             IB_EN: bool = 7,
+            /// Reset the watchdog timer
             WATCHDOG_RST: bool = 6,
             WATCHDOG: uint = 4..6,
+            /// Enable termination
             EN_TERM: bool = 3,
+            /// Enable 2x timer
             EN_TMR2X: bool = 2,
             CHG_TIMER: uint = 0..2
         },
         register Config8 {
             const ADDRESS = 8;
             const SIZE_BITS = 8;
+            /// Turn off BATTFET
             BATTFET_DIS: bool = 7,
+            /// Turn off BATTFET after a 10s delay
             BATTFET_DLY: bool = 6,
+            /// Enable BATTFET reset function
             BATTFET_RST_EN: bool = 5,
             OLIM: uint = 3..5,
             VBOOST: uint = 0..3
@@ -137,15 +164,21 @@ device_driver::create_device!(
             const ADDRESS = 9;
             const SIZE_BITS = 8;
             CC_CFG: uint = 4..7,
+            /// OTG is automatically controlled by CC detection
             AUTOOTG: bool = 3,
+            /// Boost enabled
             EN_BOOST: bool = 2,
+            /// Buck allowed
             EN_BUCK: bool = 1,
+            /// Charging allowed
             EN_CHG: bool = 0,
         },
         register Config10 {
             const ADDRESS = 10;
             const SIZE_BITS = 8;
+            ///  D+/D- detection automatically starts after VIN_GD = 1 and the hold-off timer ends
             AUTODPDM: bool = 5,
+            /// Force D+/D- detection
             FORCEDPDM: bool = 4,
             RP_CFG: uint = 2..4,
             FORCE_CC: uint = 0..2,
@@ -161,14 +194,24 @@ device_driver::create_device!(
         register Config12 {
             const ADDRESS = 12;
             const SIZE_BITS = 8;
+            /// 0: Only generate INT, 1: NTC1 is fully functional
             NTC1_ACTION: bool = 6,
+            /// 0: Only generate INT, 1: NTC2 is fully functional
             NTC2_ACTION: bool = 5,
+            /// Battery OVP is enabled
             BATT_OVP_EN: bool = 4,
-            BATT_LOW: uint = 2..4,
+            BATT_LOW: uint as enum BatteryLowThreshold {
+                Threshold_3000mV = 0,
+                Threshold_3100mv = 1,
+                Threshold_3200mV = 2,
+                Threshold_3300mV = 3,
+            } = 2..4,
+            /// 0: Only generate INT on Battery Low, 1: Turns off boost on Battery Low
             BOOST_STP_EN: bool = 1,
+            /// 0: Boost OTP is ignored, 1: Boost OTP occurs at TREG
             BOOST_OTP_EN: bool = 0,
         },
-        register Config13 {
+        register Config13_NtcActions {
             const ADDRESS = 13;
             const SIZE_BITS = 8;
             WARM_ACT: uint = 7..8,
@@ -176,7 +219,7 @@ device_driver::create_device!(
             JEITA_VSET: uint = 2..4,
             JEITA_ISET: uint = 0..2,
         },
-        register Config14 {
+        register Config14_NtcTemperatureThreshold {
             const ADDRESS = 14;
             const SIZE_BITS = 8;
             VHOT: uint = 7..8,
@@ -184,21 +227,30 @@ device_driver::create_device!(
             VCOOL: uint = 2..4,
             VCOLD: uint = 0..2,
         },
-        register Config15 {
+        register Config15_InputImpedanceTest {
             const ADDRESS = 15;
             const SIZE_BITS = 8;
+            /// Enables the input impedance test. Source current to the IN pin.
             VIN_SRC_EN: bool = 6,
+            /// Configures the input impedance test current source.
             IVIN_SRC: uint = 2..6,
+            /// Configures the input impedance test comparator threshold.
             VIN_TEST: uint = 0..1,
         },
-        register Config16 {
+        register Config16_InterruptMask {
             const ADDRESS = 16;
             const SIZE_BITS = 8;
+            /// Mask the THERM_STAT INT pulse
             MASK_THERM: bool = 5,
+            /// Mask the VINDPM and IINDPM INT pulse
             MASK_DPM: bool = 4,
+            /// Mask the TOPOFF timer INT pulse
             MASK_TOPOFF: bool = 3,
+            /// Mask the CC_SNK and CC_SRC INT pulse
             MASK_CC_INT: bool = 2,
+            /// Mask the BATT_LOW INT pulse
             MASK_BATT_LOW: bool = 1,
+            /// Mask DEBUGACC and AUDIOACC INT pulse
             MASK_DEBUG_AUDIO: bool = 0,
         },
         register Status17 {
