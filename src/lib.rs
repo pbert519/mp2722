@@ -205,7 +205,21 @@ device_driver::create_device!(
             type Access = RO;
             const ADDRESS = 17;
             const SIZE_BITS = 8;
-            DPDM_STAT: uint = 4..8,
+            /// Returns the input source D+/D- detection result.
+            DPDM_STAT: uint as enum DPDM_Detection_Result {
+                NotStarted = 0,
+                USB_SDP_500mA = 1,
+                USB_DCP_2000mA = 2,
+                USB_CDP_1500mA = 3,
+                Divider_1000mA = 4,
+                Divider_2100mA = 5,
+                Divider_2400mA = 6,
+                Divider_2000mA = 7,
+                Unknown_500mA = 8,
+                HV_2000mA = 9,
+                Divider_3000mA = 14,
+                Other = catch_all
+            } = 4..8,
             VINDPM_STAT: bool = 1,
             IINDPM_STAT: bool = 0,
         },
@@ -213,50 +227,138 @@ device_driver::create_device!(
             type Access = RO;
             const ADDRESS = 18;
             const SIZE_BITS = 8;
+            /// When VVIN_UV < VIN < VVIN_OV in buck mode, this bit is set to 1 and the PG pin is driven low (after a 15ms debounce time).
             VIN_GD: bool = 6,
+            /// Indicates whether input source type detection has finished. IIN_LIM[4:0] is updated.
             VIN_RDY: bool = 5,
+            /// Legacy cable is detected (not valid in DRP mode)
             LEGACYCABLE: bool = 4,
+            /// In thermal regulation
             THERM_STAT: bool = 3,
+            /// 0: VBATT < VSYS_MIN, 1: VBATT > VSYS_MIN
             VSYS_STAT: bool = 2,
+            /// The watchdog timer has expired
             WATCHDOG_FAULT: bool = 1,
+            /// The 3/4 watchdog timer has expired
             WATCHDOG_BARK: bool = 0,
         },
         register Status19 {
             type Access = RO;
             const ADDRESS = 19;
             const SIZE_BITS = 8;
-            CHG_STAT: uint = 5..8,
-            BOOST_FAULT: uint = 2..5,
-            CHG_FAULT: uint = 0..2,
+            CHG_STAT: uint as enum ChargingState {
+                NotCharging = 0,
+                TrickleCharge = 1,
+                PreCharge = 2,
+                FastCharge = 3,
+                ConstantVoltageCharge = 4,
+                ChargingDone = 5,
+                Other = catch_all
+            } = 5..8,
+            BOOST_FAULT: uint as enum BoostFault {
+                Normal = 0,
+                /// An IN overload or short (latch-off) has occurred
+                InOverload = 1,
+                /// Boost over-voltage protection (OVP) (not latch) has occurred
+                BoostOverVoltage = 2,
+                /// Boost over-temperature protection (latch-off) has occurred
+                BoostOverTemperature = 3,
+                /// The boost has stopped due to BATT_LOW (latch-off)
+                BattLow = 4,
+                Other = catch_all,
+            } = 2..5,
+            CHG_FAULT: uint as enum ChargeFault {
+                Normal = 0,
+                InputOverVoltage = 1,
+                ChargeTimerExpired = 2,
+                BatteryOverVoltage = 3,
+            } = 0..2,
         },
         register Status20 {
             type Access = RO;
             const ADDRESS = 20;
             const SIZE_BITS = 8;
+            /// NTC is missing (VNTC > 95% of VVRNTC)
             NTC_MISSING: bool = 7,
+            /// The battery is missing (2 terminations detected within 3 seconds)
             BATT_MISSING: bool = 6,
-            NTC1_FAULT: uint = 3..6,
-            NTC2_FAULT: uint = 0..3,
+            NTC1_FAULT: uint as enum NTC1_FAULT {
+                Normal = 0,
+                Warm = 1,
+                Cool = 2,
+                Cold = 3,
+                Hot = 4,
+                Other = catch_all
+            } = 3..6,
+            NTC2_FAULT: uint as enum NTC2_FAULT {
+                Normal = 0,
+                Warm = 1,
+                Cool = 2,
+                Cold = 3,
+                Hot = 4,
+                Other = catch_all
+            } = 0..3,
         },
         register Status21 {
             type Access = RO;
             const ADDRESS = 21;
             const SIZE_BITS = 8;
-            CC1_SNK_STAT: uint = 6..8,
-            CC2_SNK_STAT: uint = 4..6,
-            CC1_SRC_STAT: uint = 2..4,
-            CC2_SRC_STAT: uint = 0..2,
+            CC1_SNK_STAT: uint as enum CC1_SNK_STAT{
+                /// CC1 detects vRa
+                vRa = 0,
+                /// CC1 detects vRd-USB
+                VRd_USB = 1,
+                /// CC1 detects vRd-1.5
+                vRd_1_5 = 2,
+                /// CC1 detects vRd-3.0
+                vRd_3_0 = 3,
+            } = 6..8,
+            CC2_SNK_STAT: uint as enum CC2_SNK_STAT{
+                /// CC2 detects vRa
+                vRa = 0,
+                /// CC2 detects vRd-USB
+                VRd_USB = 1,
+                /// CC2 detects vRd-1.5
+                vRd_1_5 = 2,
+                /// CC2 detects vRd-3.0
+                vRd_3_0 = 3,
+            } = 4..6,
+            CC1_SRC_STAT: uint as enum CC1_SRC_STAT{
+                /// CC1 detects vOPEN
+                vOPEN = 0,
+                /// CC1 detects vRd
+                VRd = 1,
+                /// CC1 detects vRa
+                vRa= 2,
+                Other = catch_all
+            } = 2..4,
+            CC2_SRC_STAT: uint as enum CC2_SRC_STAT{
+                /// CC2 detects vOPEN
+                vOPEN = 0,
+                /// CC2 detects vRd
+                VRd = 1,
+                /// CC2 detects vRa
+                vRa= 2,
+                Other = catch_all
+            }  = 0..2,
         },
         register Status22 {
             type Access = RO;
             const ADDRESS = 22;
             const SIZE_BITS = 8;
+            /// the top-off timer is counting
             TOPOFF_ACTIVE: bool = 6,
+            /// The battery is discharging
             BFET_STAT: bool = 5,
+            /// VBATT is below BATT_LOW[1:0]. The hysteresis = 200mV
             BATT_LOW_STAT: bool = 4,
+            /// If the boost needs to be turned on/off by CC detection, this bit is set/reset with an INT pulse followed.
             OTG_NEED: bool = 3,
+            /// VIN has reached the VIN_TEST threshold
             VIN_TEST_HIGH: bool = 2,
+            /// Enters DebugAccessory.SNK state
             DEBUGACC: bool = 1,
+            /// Enters AudioAccessory state
             AUDIOACC: bool = 0,
         }
     }
