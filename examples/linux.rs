@@ -8,7 +8,8 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     let mut device = Mp2722Registers::new(interface);
 
-    println!("MP2722 Status: \n {:?} \n {:?} \n {:?} \n {:?} \n {:?} \n {:?} \n", 
+    println!(
+        "MP2722 Status: \n {:?} \n {:?} \n {:?} \n {:?} \n {:?} \n {:?} \n",
         device.status_17().read().unwrap(),
         device.status_18().read().unwrap(),
         device.status_19().read().unwrap(),
