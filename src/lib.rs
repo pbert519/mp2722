@@ -56,6 +56,8 @@ impl<I2C: embedded_hal::i2c::I2c> device_driver::RegisterInterface for Mp2722Int
     }
 }
 
+
+
 device_driver::create_device!(
     device_name: Mp2722Registers,
     dsl: {
@@ -79,22 +81,75 @@ device_driver::create_device!(
             /// Enable the hold-off timer
             HOLDOFF_TMR: bool = 3,
             /// Set buck / boost frequency
-            SW_FREQ: uint = 1..3,
+            SW_FREQ: uint as enum SwFreq {
+                Freq750kHz = 0b00,
+                Freq1000kHz = 0b01,
+                Freq1250kHz = 0b10,
+                Freq1500kHz = 0b11,
+            } = 1..3,
+            /// VIN tracking enable (forces VIN_LIM ≥ VBATT + 165 mV)
             EN_VIN_TRK: bool = 0,
         },
         register Config1 {
             const ADDRESS = 1;
             const SIZE_BITS = 8;
             /// Force limit input current
-            IIN_MODE: uint = 5..8,
+            IIN_MODE: uint as enum IinMode {
+                Auto = 0b000,
+                Force100m = 0b001,
+                Force500m = 0b010,
+                Force900m = 0b011,
+                Force1500m = 0b100,
+                Force2000m = 0b101,
+                Force3000m = 0b110,
+                Other = catch_all,
+            } = 5..8,
             /// input current limit, updated by input source detection, can be overwritten
-            IIN_LIMIT: uint = 0..5
+            IIN_LIMIT: uint as enum InputCurrentLimit {
+                I100mA    = 0b00000,
+                I200mA  = 0b00001,
+                I300mA  = 0b00010,
+                I400mA  = 0b00011,
+                I500mA  = 0b00100,
+                I600mA  = 0b00101,
+                I700mA  = 0b00110,
+                I800mA  = 0b00111,
+                I900mA  = 0b01000,
+                I1000mA  = 0b01001,
+                I1100mA  = 0b01010,
+                I1200mA  = 0b01011,
+                I1300mA  = 0b01100,
+                I1400mA  = 0b01101,
+                I1500mA  = 0b01110,
+                I1600mA  = 0b01111,
+                I1700mA  = 0b10000,
+                I1800mA  = 0b10001,
+                I1900mA  = 0b10010,
+                I2000mA  = 0b10011,
+                I2100mA  = 0b10100,
+                I2200mA  = 0b10101,
+                I2300mA  = 0b10110,
+                I2400mA  = 0b10111,
+                I2500mA  = 0b11000,
+                I2600mA  = 0b11001,
+                I2700mA  = 0b11010,
+                I2800mA  = 0b11011,
+                I2900mA  = 0b11100,
+                I3000mA  = 0b11101,
+                I3100mA  = 0b11110,
+                I3200mA  = 0b11111,
+            } = 0..5
         },
         register Config2 {
             const ADDRESS = 2;
             const SIZE_BITS = 8;
             /// pre charge to fast charge threshold
-            VPRE: uint = 6..8,
+            VPRE: uint as enum PreChargeToFastChargeThreshold { 
+                V2400mV = 0b00,
+                V2600mV = 0b01,
+                V2800mV = 0b10,
+                V3000mV = 0b11,
+            } =  6..8,
             /// Fast charge current
             ICC: uint = 0..6
         },
@@ -109,7 +164,7 @@ device_driver::create_device!(
         register Config4 {
             const ADDRESS = 4;
             const SIZE_BITS = 8;
-            /// Recharge threshold
+            /// Recharge threshold:  0: 100mV, 1: 200mV
             VRECHG: bool = 7,
             /// Trickle charge current
             ITRICKLE: uint = 4..7,
@@ -120,7 +175,12 @@ device_driver::create_device!(
             const ADDRESS = 5;
             const SIZE_BITS = 8;
             /// Timer to stop charging after charge termination
-            TOPOFF_TM: uint = 6..8,
+            TOPOFF_TM: uint as enum TopOffTimer {
+                Disabled = 0b00,
+                T15min = 0b01,
+                T30min = 0b10,
+                T45min = 0b11,
+            } = 6..8,
             /// Battery regulation voltage (max battery voltage)
             VBATT: uint = 0..6
         },
@@ -128,11 +188,34 @@ device_driver::create_device!(
             const ADDRESS = 6;
             const SIZE_BITS = 8;
             /// Input over voltage protection threshold
-            VIN_OVP: uint = 6..8,
+            VIN_OVP: uint as enum VinOvp {
+                V6_3 = 0b00,
+                V11 = 0b01,
+                V14 = 0b10,
+                Disabled = 0b11,
+            } = 6..8,
             /// Minimum system voltage
-            SYS_MIN: uint = 3..6,
+            SYS_MIN: uint as enum SysMin {
+                V2975mV = 0b000,
+                V3150mV = 0b001,
+                V3325mV = 0b010,
+                V3500mV = 0b011,
+                V3588mV = 0b100,
+                V3675mV = 0b101,
+                V3763mV = 0b110,
+                Other = 0b111,
+            } = 3..6,
             /// Thermal threshold for charge regulation and boost mode protection
-            TREG: uint = 0..3
+            TREG: uint as enum ThermanRegulationThreshold {
+                T60DegreesCelsius = 0b000,
+                T70DegreesCelsius = 0b001,
+                T80DegreesCelsius = 0b010,
+                T90DegreesCelsius = 0b011,
+                T100DegreesCelsius = 0b100,
+                T110DegreesCelsius = 0b101,
+                T120DegreesCelsius = 0b110,
+                Other = 0b111,
+            } = 0..3
         },
         register Config7 {
             const ADDRESS = 7;
@@ -141,12 +224,23 @@ device_driver::create_device!(
             IB_EN: bool = 7,
             /// Reset the watchdog timer
             WATCHDOG_RST: bool = 6,
-            WATCHDOG: uint = 4..6,
+            /// Watchdog timer configuration
+            WATCHDOG: uint as enum Watchdog {
+                Disabled = 0b00,
+                T40s = 0b01,
+                T80s = 0b10,
+                T160s = 0b11,
+            } = 4..6,
             /// Enable termination
             EN_TERM: bool = 3,
             /// Enable 2x timer
             EN_TMR2X: bool = 2,
-            CHG_TIMER: uint = 0..2
+            CHG_TIMER: uint as enum ChargeSafetyTimer {
+                Disabled = 0b00,
+                T5hrs = 0b01,
+                T10hrs = 0b10,
+                T15hrs = 0b11,
+            } = 0..2
         },
         register Config8 {
             const ADDRESS = 8;
@@ -163,7 +257,15 @@ device_driver::create_device!(
         register Config9 {
             const ADDRESS = 9;
             const SIZE_BITS = 8;
-            CC_CFG: uint = 4..7,
+            CC_CFG: uint as enum CcCfg {
+                SinkOnly = 0b000,
+                SourceOnly = 0b001,
+                DRP = 0b010,
+                DRPTrySNK = 0b011,
+                DRPTrySRC = 0b100,
+                Disabled = 0b101,
+                Other = catch_all,
+            } = 4..7,
             /// OTG is automatically controlled by CC detection
             AUTOOTG: bool = 3,
             /// Boost enabled
@@ -180,8 +282,18 @@ device_driver::create_device!(
             AUTODPDM: bool = 5,
             /// Force D+/D- detection
             FORCEDPDM: bool = 4,
-            RP_CFG: uint = 2..4,
-            FORCE_CC: uint = 0..2,
+            RP_CFG: uint as enum RpCfg {
+                Rp80uA = 0b00,
+                Rp180uA = 0b01,
+                Rp330uA = 0b10,
+                Other = catch_all,
+            } = 2..4,
+            FORCE_CC: uint as enum ForceCC {
+                AutoCC_CFG = 0b00,
+                ForceRd = 0b01,
+                ForceRp = 0b10,
+                HiZ = 0b11,
+            } = 0..2,
         },
         register Config11 {
             const ADDRESS = 11;
@@ -214,10 +326,30 @@ device_driver::create_device!(
         register Config13_NtcActions {
             const ADDRESS = 13;
             const SIZE_BITS = 8;
-            WARM_ACT: uint = 7..8,
-            COOL_ACT: uint = 4..6,
-            JEITA_VSET: uint = 2..4,
-            JEITA_ISET: uint = 0..2,
+            WARM_ACT: uint as enum WarmAction {
+                NoAction = 0b00,
+                ReduceVBATT_REG = 0b01,
+                ReduceIcc = 0b10,
+                ReduceBoth = 0b11,
+            } = 6..8,
+            COOL_ACT: uint as enum CoolAction {
+                NoAction = 0b00,
+                ReduceVBATT_REG = 0b01,
+                ReduceIcc = 0b10,
+                ReduceBoth = 0b11,
+            } = 4..6,
+            JEITA_VSET: uint as enum JeitaVset {
+                VBATT_REG_100mV = 0b00,
+                VBATT_REG_150mV = 0b01,
+                VBATT_REG_200mV = 0b10,
+                VBATT_REG_250mV = 0b11,
+            } = 2..4,
+            JEITA_ISET: uint as enum JeitaISet {
+                Percent50 = 0b00,
+                Percent33 = 0b01,
+                Percent20 = 0b10,
+                Other = 0b11,
+            }= 0..2,
         },
         register Config14_NtcTemperatureThreshold {
             const ADDRESS = 14;
@@ -233,9 +365,25 @@ device_driver::create_device!(
             /// Enables the input impedance test. Source current to the IN pin.
             VIN_SRC_EN: bool = 6,
             /// Configures the input impedance test current source.
-            IVIN_SRC: uint = 2..6,
+            IVIN_SRC: uint as enum InputImpedanceTestCurrent {
+                Current_5uA = 0,
+                Current_10uA = 1,
+                Current_20uA = 2,
+                Current_40uA = 3,
+                Current_80uA = 4,
+                Current_160uA = 5,
+                Current_320uA = 6,
+                Current_640uA = 7,
+                Current_1280uA = 8,
+                Other = catch_all,
+            }= 2..6,
             /// Configures the input impedance test comparator threshold.
-            VIN_TEST: uint = 0..1,
+            VIN_TEST: uint as enum InputImpedanceThreshold {
+                Threshold_300mV = 0,
+                Threshold_500mV = 1,
+                Threshold_1000mV = 2,
+                Threshold_1500mV = 3,
+            } = 0..2,
         },
         register Config16_InterruptMask {
             const ADDRESS = 16;
