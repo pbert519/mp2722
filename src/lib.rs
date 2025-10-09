@@ -56,8 +56,6 @@ impl<I2C: embedded_hal::i2c::I2c> device_driver::RegisterInterface for Mp2722Int
     }
 }
 
-
-
 device_driver::create_device!(
     device_name: Mp2722Registers,
     dsl: {
@@ -144,7 +142,7 @@ device_driver::create_device!(
             const ADDRESS = 2;
             const SIZE_BITS = 8;
             /// pre charge to fast charge threshold
-            VPRE: uint as enum PreChargeToFastChargeThreshold { 
+            VPRE: uint as enum PreChargeToFastChargeThreshold {
                 V2400mV = 0b00,
                 V2600mV = 0b01,
                 V2800mV = 0b10,
