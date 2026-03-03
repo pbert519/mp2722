@@ -1,23 +1,32 @@
 #![cfg_attr(not(test), no_std)]
-//#![warn(missing_docs)]
 
+//! MP2722 rust driver
+//! Provides typed access to all configuration and status registers.
+//! Requires an embedded_hal i2c device.
+
+/// Default I2C Address
 const ADDRESS: u8 = 0x3F;
 
+/// MP2722 error
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 #[cfg_attr(feature = "defmt-03", derive(defmt::Format))]
 pub enum Mp2722Error<E> {
+    /// An i2c error occurred
     I2c(E),
 }
 
+/// Bundles all required interfaces to interact with the MP2722 chip.
 pub struct Mp2722Interface<I2C: embedded_hal::i2c::I2c> {
     i2c: I2C,
 }
 
 impl<I2C: embedded_hal::i2c::I2c> Mp2722Interface<I2C> {
+    /// Create an new interface
     pub fn new(i2c: I2C) -> Self {
         Self { i2c }
     }
 
+    /// Free all used hardware resources
     pub fn free(self) -> I2C {
         self.i2c
     }
